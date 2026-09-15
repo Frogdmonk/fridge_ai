@@ -327,4 +327,4 @@ This project demonstrates several practical AI engineering concepts:
 
 ## ⚠️ Limitations
 
-* Detection accuracy depends o
+* Detection accuracy depends on the model used.
