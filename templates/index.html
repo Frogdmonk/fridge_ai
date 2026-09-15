@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fridge AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div id="toastContainer" class="toast-container"></div>
+    <div class="bg-glow"></div>
+
+    <div class="shell">
+        <header class="hero">
+            <div class="badge">Computer Vision, RAG, LLM</div>
+            <h1>Fridge <span class="accent">AI</span></h1>
+            <p class="subtitle">Point a camera at your fridge. Get a real recipe back, grounded in what's actually in there.</p>
+        </header>
+
+        {% if error %}
+            <div class="alert">{{ error }}</div>
+        {% endif %}
+
+        <div class="upload-card">
+            <div id="dropzone" class="dropzone">
+                <input type="file" id="fileInput" accept="video/*" hidden>
+
+                <div id="dropzoneEmpty" class="dropzone-state">
+                    <div class="dropzone-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div class="dropzone-text">
+                        <strong>Drop your fridge video here</strong>
+                        <span>or <u>click to browse</u>, MP4 and MOV supported</span>
+                    </div>
+                </div>
+
+                <div id="dropzonePreview" class="dropzone-state hidden">
+                    <video id="previewVideo" muted playsinline></video>
+                    <div class="preview-overlay">
+                        <span id="previewName" class="preview-name"></span>
+                        <button type="button" id="removeFile" class="preview-remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="submitBtn" class="btn-primary" disabled>
+                <span id="submitLabel">Select a video to begin</span>
+            </button>
+
+            <div id="uploadProgress" class="upload-progress hidden">
+                <div class="upload-progress-bar">
+                    <div id="uploadProgressFill" class="upload-progress-fill"></div>
+                </div>
+                <span id="uploadProgressText">Uploading... 0%</span>
+            </div>
+        </div>
+
+        <div class="pipeline-preview">
+            <div class="pipeline-step" data-step="1">
+                <div class="pipeline-icon">1</div>
+                <span>Object Detection</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step" data-step="2">
+                <div class="pipeline-icon">2</div>
+                <span>Embedding</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step" data-step="3">
+                <div class="pipeline-icon">3</div>
+                <span>Vector Search</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step" data-step="4">
+                <div class="pipeline-icon">4</div>
+                <span>Recipe Generation</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var fileInput = document.getElementById("fileInput");
+        var dropzone = document.getElementById("dropzone");
+        var dropzoneEmpty = document.getElementById("dropzoneEmpty");
+        var dropzonePreview = document.getElementById("dropzonePreview");
+        var previewVideo = document.getElementById("previewVideo");
+        var previewName = document.getElementById("previewName");
+        var removeFile = document.getElementById("removeFile");
+        var submitBtn = document.getElementById("submitBtn");
+        var submitLabel = document.getElementById("submitLabel");
+        var uploadProgress = document.getElementById("uploadProgress");
+        var uploadProgressFill = document.getElementById("uploadProgressFill");
+        var uploadProgressText = document.getElementById("uploadProgressText");
+
+        var selectedFile = null;
+
+        function showToast(message, type) {
+            var container = document.getElementById("toastContainer");
+            var toast = document.createElement("div");
+            toast.className = "toast " + (type || "info");
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.classList.add("toast-out");
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        dropzone.addEventListener("click", function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("click", function(e) {
+            e.stopPropagation();
+        });
+
+        fileInput.addEventListener("change", function() {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        ["dragenter", "dragover"].forEach(function(evt) {
+            dropzone.addEventListener(evt, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(function(evt) {
+            dropzone.addEventListener(evt, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove("dragover");
+            });
+        });
+
+        dropzone.addEventListener("drop", function(e) {
+            var files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        removeFile.addEventListener("click", function(e) {
+            e.stopPropagation();
+            resetDropzone();
+        });
+
+        function handleFile(file) {
+            if (file.type.indexOf("video/") !== 0) {
+                showToast("Please choose a video file (MP4 or MOV).", "error");
+                return;
+            }
+
+            selectedFile = file;
+
+            var url = URL.createObjectURL(file);
+            previewVideo.src = url;
+            previewName.textContent = file.name + " (" + (file.size / (1024 * 1024)).toFixed(1) + " MB)";
+
+            dropzoneEmpty.classList.add("hidden");
+            dropzonePreview.classList.remove("hidden");
+            dropzone.classList.add("has-file");
+
+            submitBtn.disabled = false;
+            submitLabel.textContent = "Analyze Video";
+        }
+
+        function resetDropzone() {
+            selectedFile = null;
+            fileInput.value = "";
+            previewVideo.src = "";
+
+            dropzoneEmpty.classList.remove("hidden");
+            dropzonePreview.classList.add("hidden");
+            dropzone.classList.remove("has-file");
+
+            submitBtn.disabled = true;
+            submitLabel.textContent = "Select a video to begin";
+        }
+
+        submitBtn.addEventListener("click", function() {
+            if (!selectedFile) { return; }
+
+            submitBtn.disabled = true;
+            submitLabel.textContent = "Uploading...";
+            uploadProgress.classList.remove("hidden");
+
+            var formData = new FormData();
+            formData.append("video", selectedFile);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/analyze");
+
+            xhr.upload.addEventListener("progress", function(e) {
+                if (e.lengthComputable) {
+                    var pct = Math.round((e.loaded / e.total) * 100);
+                    uploadProgressFill.style.width = pct + "%";
+                    uploadProgressText.textContent = "Uploading... " + pct + "%";
+                }
+            });
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    uploadProgressText.textContent = "Upload complete. Starting pipeline...";
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                } else {
+                    submitLabel.textContent = "Upload failed, try again";
+                    submitBtn.disabled = false;
+                    uploadProgress.classList.add("hidden");
+                }
+            };
+
+            xhr.onerror = function() {
+                submitLabel.textContent = "Upload failed, try again";
+                submitBtn.disabled = false;
+                uploadProgress.classList.add("hidden");
+            };
+
+            xhr.send(formData);
+        });
+
+        var canvas = document.getElementById("particles");
+        var ctx = canvas.getContext("2d");
+        var particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        for (var i = 0; i < 40; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 1.8 + 0.4,
+                vx: (Math.random() - 0.5) * 0.15,
+                vy: (Math.random() - 0.5) * 0.15,
+                alpha: Math.random() * 0.4 + 0.1
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) { p.x = canvas.width; }
+                if (p.x > canvas.width) { p.x = 0; }
+                if (p.y < 0) { p.y = canvas.height; }
+                if (p.y > canvas.height) { p.y = 0; }
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(120,150,255," + p.alpha + ")";
+                ctx.fill();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        var pipelineSteps = document.querySelectorAll(".pipeline-step");
+        var pulseIndex = 0;
+        setInterval(function() {
+            for (var i = 0; i < pipelineSteps.length; i++) { pipelineSteps[i].classList.remove("pulse"); }
+            pipelineSteps[pulseIndex].classList.add("pulse");
+            pulseIndex = (pulseIndex + 1) % pipelineSteps.length;
+        }, 1400);
+    </script>
+</body>
+</html>

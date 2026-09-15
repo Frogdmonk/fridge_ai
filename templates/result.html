@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Recipe - Fridge AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Your Recipe</h1>
+
+        <h2>Detected Ingredients</h2>
+        {% if ingredients %}
+            <ul>
+            {% for name, conf in ingredients.items() %}
+                <li>{{ name }} ({{ "%.0f"|format(conf * 100) }}% confidence)</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>None detected.</p>
+        {% endif %}
+
+        {% if recipes %}
+        <h2>Retrieved Reference Recipes</h2>
+        <ul>
+        {% for match in recipes %}
+            <li>{{ match.metadata.title }} - similarity score {{ "%.2f"|format(match.score) }}</li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        <h2>Generated Recipe</h2>
+        <pre class="recipe-box">{{ final_recipe }}</pre>
+
+        <a href="/">Try another video</a>
+    </div>
+</body>
+</html>
