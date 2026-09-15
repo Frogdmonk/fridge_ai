@@ -7,12 +7,23 @@ Fridge AI is an AI-powered computer vision and retrieval-augmented recipe genera
 ## ✨ Features
 
 * 🎥 **Video-based ingredient detection**
+* <img width="494" height="318" alt="image" src="https://github.com/user-attachments/assets/8b34a80c-50da-4ad3-acfc-38c1787c6ee2" />
+
 * 👁️ **YOLOv8 object detection**
+* <img width="791" height="386" alt="image" src="https://github.com/user-attachments/assets/1d1ea6f3-4365-48d3-8614-4eff4f56822d" />
+
 * 🎞️ **Motion-based keyframe selection with OpenCV**
 * 🖼️ **Annotated ingredient detection**
 * 🔎 **Semantic recipe retrieval**
+* <img width="455" height="140" alt="image" src="https://github.com/user-attachments/assets/783be371-d82b-4d1d-a61a-b45d0cf63a35" />
+
 * 🧠 **Ingredient-overlap ranking**
+* <img width="936" height="323" alt="image" src="https://github.com/user-attachments/assets/eb6a0798-3316-4c92-a98e-6d7cb2032bb5" />
+
 * 🤖 **LLM-powered recipe generation**
+* <img width="920" height="359" alt="image" src="https://github.com/user-attachments/assets/f6aff04f-283e-4595-88fb-c40a07db37b2" />
+<img width="933" height="314" alt="image" src="https://github.com/user-attachments/assets/ca8548bd-9db3-4a0f-a0dd-4f18f4fa2450" />
+
 * 🌐 **Flask web application**
 
 ## 🧠 AI Pipeline
