@@ -130,31 +130,33 @@ The generation is constrained to reduce the chance of suggesting ingredients tha
 ## 📁 Project Structure
 
 ```text
-fridge-ai/
-│
-├── app.py                  # Flask application & AI pipeline
-├── seed.py                 # Seed Pinecone with sample recipes
-├── seed_kaggle.py          # Load recipes from recipe.csv
-├── inspect_csv.py          # Inspect recipe dataset
-│
-├── test_connection.py      # API connection tests
-├── test_pinecone.py        # Pinecone integration test
-├── test_yolo.py            # YOLO detection test
-├── test_video.py           # Video processing test
-│
-├── requirements.txt        # Python dependencies
-├── recipe.csv              # Recipe dataset
-│
-├── templates/
-│   └── index.html          # Web interface
-│
+fridge_ai/
+├── app.py
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── recipe.csv
+├── extracted_script.js
+├── inspect_csv.py
+├── seed.py
+├── seed_kaggle.py
+├── write_index.py
+├── write_processing.py
+├── test_connection.py
+├── test_pinecone.py
+├── test_video.py
+├── test_yolo.py
 ├── static/
-│   └── ...                 # CSS & generated detection images
-│
-├── uploads/                # Temporary uploaded videos
-│
-├── yolov8m.pt              # YOLO model weights
-└── .env                    # API credentials (not committed)
+│   └── style.css
+├── templates/
+│   ├── index.html
+│   ├── processing.html
+│   └── result.html
+├── uploads/
+│   └── .gitkeep
+└── static/
+    └── detections/
+        └── .gitkeep                    # API credentials (not committed)
 ```
 
 ---
